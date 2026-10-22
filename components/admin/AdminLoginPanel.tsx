@@ -37,7 +37,7 @@ export function AdminLoginPanel() {
       return;
     }
 
-    router.push("/admin");
+    router.push("/admin/dashboard");
     router.refresh();
   }
 

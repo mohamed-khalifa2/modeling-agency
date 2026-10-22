@@ -10,6 +10,7 @@ import { modelCategoryLabels, type Model, type ModelCategory } from "@/types";
 type ModelGridProps = {
   models: Model[];
   showTabs?: boolean;
+  disableLinks?: boolean;
   sizes?: string;
 };
 
@@ -18,6 +19,7 @@ type FilterValue = "all" | ModelCategory;
 export function ModelGrid({
   models,
   showTabs = true,
+  disableLinks = false,
   sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
 }: ModelGridProps) {
   const [active, setActive] = useState<FilterValue>("all");
@@ -68,35 +70,46 @@ export function ModelGrid({
 
       {visible.length > 0 ? (
         <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {visible.map((model) => (
-            <li key={model.id}>
-              <Link
-                href={`/models/${model.slug}`}
-                className="group block rounded-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold-deep"
-              >
+          {visible.map((model) => {
+            const image = model.cover_image_url ? (
+              <Image
+                fill
+                src={model.cover_image_url}
+                alt={model.name}
+                sizes={sizes}
+                placeholder="blur"
+                blurDataURL={blurPlaceholder}
+                className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105 group-focus-visible:scale-105"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center bg-paper-soft">
+                <span className="font-serif text-3xl font-light text-ink/30">
+                  {model.name}
+                </span>
+              </div>
+            );
+
+            const card = (
+              <>
                 <div className="skeleton relative aspect-[3/4] overflow-hidden bg-ink/5">
-                  {model.cover_image_url ? (
-                    <Image
-                      fill
-                      src={model.cover_image_url}
-                      alt={model.name}
-                      sizes={sizes}
-                      placeholder="blur"
-                      blurDataURL={blurPlaceholder}
-                      className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105 group-focus-visible:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center bg-paper-soft">
-                      <span className="font-serif text-3xl font-light text-ink/30">
-                        {model.name}
-                      </span>
-                    </div>
-                  )}
+                  {image}
                   <div
                     aria-hidden
-                    className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/25 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100"
+                    className={cn(
+                      "absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/25 to-transparent transition-opacity duration-500",
+                      disableLinks
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+                    )}
                   />
-                  <div className="absolute inset-x-0 bottom-0 translate-y-3 p-6 text-paper opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+                  <div
+                    className={cn(
+                      "absolute inset-x-0 bottom-0 p-6 text-paper transition-all duration-500",
+                      disableLinks
+                        ? "translate-y-0 opacity-100"
+                        : "translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
+                    )}
+                  >
                     <p className="font-serif text-2xl font-light">
                       {model.name}
                     </p>
@@ -105,9 +118,24 @@ export function ModelGrid({
                     </p>
                   </div>
                 </div>
-              </Link>
-            </li>
-          ))}
+              </>
+            );
+
+            return (
+              <li key={model.id}>
+                {disableLinks ? (
+                  <div className="group block">{card}</div>
+                ) : (
+                  <Link
+                    href={`/models/${model.slug}`}
+                    className="group block rounded-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold-deep"
+                  >
+                    {card}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
         </ul>
       ) : (
         <p className="mt-12 text-sm text-ink/60">

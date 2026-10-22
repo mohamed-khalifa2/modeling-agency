@@ -33,10 +33,8 @@ function SidebarPanel({
         <ul className="space-y-0.5">
           {adminNav.map((item) => {
             const active =
-              item.href === "/admin"
-                ? pathname === item.href
-                : pathname === item.href ||
-                  pathname.startsWith(`${item.href}/`);
+              pathname === item.href ||
+              pathname.startsWith(`${item.href}/`);
 
             return (
               <li key={item.href}>

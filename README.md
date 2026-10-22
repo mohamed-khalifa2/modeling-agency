@@ -6,12 +6,13 @@ A premium editorial modeling-agency showcase built with **Next.js 16 (App Router
 
 **Public site**
 - Full-screen hero, dynamic editorial sections (3 layouts), featured models with category filter, services list, client testimonials, contact form (zod + honeypot server action)
-- `/models` roster with filters, `/models/[slug]` detail pages with gallery, stats, and booking CTA
+- `/models` roster with filters, `/models/[slug]` detail pages with gallery, stats, and email/WhatsApp booking actions
+- Dedicated `/services` and `/about` pages wired to the same CMS content; placeholder copy, contact details, and roster render until real content exists (and when the admin clears it)
 - Metadata from `site_settings` (title template, description, Open Graph), per-model metadata, `sitemap.xml`, `robots.txt`
 - `next/image` everywhere with `sizes`, blur placeholders, shimmer skeletons, branded 404/error pages
 
-**Admin (`/admin`)**
-- Email + password auth (Supabase); `proxy.ts` requires a verified session **and** a row in the `admins` table
+**Admin (`/admin` = login, dashboard at `/admin/dashboard`)**
+- Email + password auth (Supabase); `proxy.ts` requires a verified session **and** a row in the `admins` table; unauthenticated requests are redirected to `/admin`
 - Site Settings & Hero single-row forms
 - Sections / Services / Clients: table lists with add/edit/delete, visibility toggles, and drag-and-drop reordering (dnd-kit) that persists `sort_order`
 - Models: searchable/filterable list, full editor with cover upload and a reorderable multi-image gallery
@@ -77,6 +78,12 @@ Either way you get: all 9 tables (`site_settings`, `hero`, `sections`, `models`,
 
 ## 4. Create the first admin user
 
+**Option A — one-time seed (provided credentials)**
+
+Run `supabase/seed-admin.sql` in the SQL Editor **after** the migration (step 3). It creates a confirmed auth user (`mohamed.khalifa4090@gmail.com`) plus the matching `admins` row in one go. It's idempotent — re-running resets the password to the injected value. Delete the file afterwards if you don't want the password in the repository, and change the password after the first sign-in.
+
+**Option B — manual**
+
 1. Supabase Dashboard → **Authentication → Users → Add user** — enter an email and password, enable **Auto Confirm**, and create the user. Copy the user's UUID.
 2. Insert the admin row (SQL Editor):
 
@@ -84,9 +91,9 @@ Either way you get: all 9 tables (`site_settings`, `hero`, `sections`, `models`,
 insert into public.admins (user_id) values ('<user-uuid>');
 ```
 
-3. Visit `/admin/login` and sign in. Without the `admins` row, a signed-in user is redirected back to the login page by the proxy.
+3. Visit `/admin` and sign in; you land on the dashboard at `/admin/dashboard`. Without the `admins` row, a signed-in user is redirected back to `/admin` by the proxy.
 
-To grant someone else access later, repeat: add the auth user, insert into `admins`.
+To grant someone else access later, repeat Option B: add the auth user, insert into `admins`.
 
 ## 5. Develop
 
@@ -95,7 +102,7 @@ npm run dev
 ```
 
 - Public site: http://localhost:3000
-- Admin: http://localhost:3000/admin
+- Admin login: http://localhost:3000/admin (dashboard: `/admin/dashboard`)
 - Design system check: http://localhost:3000/design-test
 
 Other scripts: `npm run lint`, `npm run build`, `npm start`.
@@ -126,8 +133,8 @@ Other scripts: `npm run lint`, `npm run build`, `npm start`.
 
 ```
 app/
-  (site)/            public pages (home, models, model detail)
-  admin/             login + (dashboard) section pages
+  (site)/            public pages (home, models, model detail, services, about)
+  admin/             page.tsx = login; (dashboard)/ section pages (dashboard, settings, …)
   layout.tsx         root layout + site-wide generateMetadata
   sitemap.ts, robots.ts, not-found.tsx, error.tsx, global-error.tsx
 components/

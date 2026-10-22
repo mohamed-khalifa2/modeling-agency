@@ -4,21 +4,21 @@ import { FadeIn } from "@/components/FadeIn";
 import { SectionHeading } from "@/components/SectionHeading";
 import { ContactForm } from "@/components/site/ContactForm";
 import { mailHref, telHref, waHref } from "@/lib/contact";
+import { DEFAULT_CONTACT } from "@/lib/defaults";
 import { getSiteSettings } from "@/lib/site-settings";
 
 export async function ContactSection() {
   const settings = await getSiteSettings();
 
+  const email = settings ? settings.email : DEFAULT_CONTACT.email;
+  const phone = settings ? settings.phone : DEFAULT_CONTACT.phone;
+  const whatsapp = settings ? settings.whatsapp : DEFAULT_CONTACT.whatsapp;
+  const address = settings ? settings.address : DEFAULT_CONTACT.address;
+
   const details = [
-    settings?.email
-      ? { label: settings.email, href: mailHref(settings.email) }
-      : null,
-    settings?.phone
-      ? { label: settings.phone, href: telHref(settings.phone) }
-      : null,
-    settings?.whatsapp
-      ? { label: "WhatsApp", href: waHref(settings.whatsapp) }
-      : null,
+    email ? { label: email, href: mailHref(email) } : null,
+    phone ? { label: phone, href: telHref(phone) } : null,
+    whatsapp ? { label: "WhatsApp", href: waHref(whatsapp) } : null,
   ].filter((item): item is { label: string; href: string } => item !== null);
 
   return (
@@ -35,7 +35,7 @@ export async function ContactSection() {
               description="Casting inquiries, bookings, and applications — tell us about your project and we'll respond within two business days."
             />
 
-            {details.length > 0 || settings?.address ? (
+            {details.length > 0 || address ? (
               <div className="mt-10 space-y-3 text-sm">
                 {details.map((item) => (
                   <p key={item.href}>
@@ -47,10 +47,8 @@ export async function ContactSection() {
                     </a>
                   </p>
                 ))}
-                {settings?.address ? (
-                  <p className="leading-relaxed text-ink/50">
-                    {settings.address}
-                  </p>
+                {address ? (
+                  <p className="leading-relaxed text-ink/50">{address}</p>
                 ) : null}
               </div>
             ) : null}

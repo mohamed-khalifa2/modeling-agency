@@ -6,8 +6,9 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Container } from "@/components/Container";
 import { mailHref, telHref } from "@/lib/contact";
+import { DEFAULT_CONTACT } from "@/lib/defaults";
 import { blurPlaceholder } from "@/lib/images";
-import { siteNav } from "@/lib/site-nav";
+import { isNavActive, siteNav } from "@/lib/site-nav";
 import { cn } from "@/lib/utils";
 import type { SiteSettings } from "@/types";
 
@@ -65,13 +66,12 @@ export function SiteHeader({ settings }: { settings: SiteSettings | null }) {
     }
   }, [menuOpen]);
 
+  const phone = settings ? settings.phone : DEFAULT_CONTACT.phone;
+  const email = settings ? settings.email : DEFAULT_CONTACT.email;
+
   const contactLinks = [
-    settings?.phone
-      ? { label: settings.phone, href: telHref(settings.phone) }
-      : null,
-    settings?.email
-      ? { label: settings.email, href: mailHref(settings.email) }
-      : null,
+    phone ? { label: phone, href: telHref(phone) } : null,
+    email ? { label: email, href: mailHref(email) } : null,
   ].filter((link): link is { label: string; href: string } => link !== null);
 
   return (
@@ -142,7 +142,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings | null }) {
           <nav aria-label="Primary" className="hidden lg:block">
             <ul className="flex items-center gap-10">
               {siteNav.map((item) => {
-                const active = pathname === item.href;
+                const active = isNavActive(pathname, item.href);
                 return (
                   <li key={item.href}>
                     <Link
@@ -206,7 +206,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings | null }) {
           <nav aria-label="Mobile">
             <ul>
               {siteNav.map((item, index) => {
-                const active = pathname === item.href;
+                const active = isNavActive(pathname, item.href);
                 return (
                   <li
                     key={item.href}

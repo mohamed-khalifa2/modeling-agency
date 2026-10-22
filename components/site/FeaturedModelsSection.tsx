@@ -3,10 +3,13 @@ import { Container } from "@/components/Container";
 import { FadeIn } from "@/components/FadeIn";
 import { SectionHeading } from "@/components/SectionHeading";
 import { ModelGrid } from "@/components/site/ModelGrid";
+import { DEFAULT_MODELS } from "@/lib/defaults";
 import { getModels } from "@/lib/models";
 
 export async function FeaturedModelsSection() {
-  const models = await getModels({ limit: 6 });
+  const fetched = await getModels({ limit: 6 });
+  const isPlaceholder = fetched === null;
+  const models = fetched ?? DEFAULT_MODELS;
 
   if (models.length === 0) {
     return null;
@@ -24,7 +27,7 @@ export async function FeaturedModelsSection() {
           />
         </FadeIn>
 
-        <ModelGrid models={models} />
+        <ModelGrid models={models} disableLinks={isPlaceholder} />
 
         <FadeIn className="mt-14 text-center">
           <Button variant="outline" href="/models" showArrow>

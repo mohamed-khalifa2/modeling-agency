@@ -1,18 +1,22 @@
 -- =============================================================================
--- Modeling agency site — initial schema
+-- Modeling agency site — initial schema (re-runnable / idempotent)
 --
 -- Tables: site_settings, hero, sections, models, model_images, services,
 --         testimonials, inquiries, admins
 -- Security: RLS on everything; public read of visible content, public INSERT
 --           on inquiries, admin-only CRUD via is_admin() + admins table
 -- Storage: public "site-media" bucket, public read / admin-only write
+--
+-- Safe to paste into the SQL Editor multiple times: every object is guarded
+-- (if not exists / drop-if-exists / on conflict), seed rows are skipped when
+-- already present, and role grants are re-applied at the end.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
 -- Admins + is_admin()
 -- -----------------------------------------------------------------------------
 
-create table public.admins (
+create table if not exists public.admins (
   user_id uuid primary key references auth.users (id) on delete cascade,
   created_at timestamptz not null default now()
 );
@@ -36,6 +40,7 @@ $$;
 revoke execute on function public.is_admin() from public, anon;
 grant execute on function public.is_admin() to authenticated;
 
+drop policy if exists "Admins can manage admins" on public.admins;
 create policy "Admins can manage admins"
 on public.admins
 for all
@@ -47,7 +52,7 @@ with check (public.is_admin());
 -- site_settings (single row)
 -- -----------------------------------------------------------------------------
 
-create table public.site_settings (
+create table if not exists public.site_settings (
   id boolean primary key default true check (id),
   agency_name text not null default '',
   tagline text not null default '',
@@ -66,12 +71,14 @@ create table public.site_settings (
 
 alter table public.site_settings enable row level security;
 
+drop policy if exists "Anyone can read site settings" on public.site_settings;
 create policy "Anyone can read site settings"
 on public.site_settings
 for select
 to public
 using (true);
 
+drop policy if exists "Admins can manage site settings" on public.site_settings;
 create policy "Admins can manage site settings"
 on public.site_settings
 for all
@@ -83,7 +90,7 @@ with check (public.is_admin());
 -- hero (single row)
 -- -----------------------------------------------------------------------------
 
-create table public.hero (
+create table if not exists public.hero (
   id boolean primary key default true check (id),
   headline text not null default '',
   subheadline text,
@@ -96,12 +103,14 @@ create table public.hero (
 
 alter table public.hero enable row level security;
 
+drop policy if exists "Anyone can read hero" on public.hero;
 create policy "Anyone can read hero"
 on public.hero
 for select
 to public
 using (true);
 
+drop policy if exists "Admins can manage hero" on public.hero;
 create policy "Admins can manage hero"
 on public.hero
 for all
@@ -113,7 +122,7 @@ with check (public.is_admin());
 -- sections
 -- -----------------------------------------------------------------------------
 
-create table public.sections (
+create table if not exists public.sections (
   id uuid primary key default gen_random_uuid(),
   key text not null unique,
   title text not null default '',
@@ -128,12 +137,14 @@ create table public.sections (
 
 alter table public.sections enable row level security;
 
+drop policy if exists "Anyone can read visible sections" on public.sections;
 create policy "Anyone can read visible sections"
 on public.sections
 for select
 to public
 using (is_visible = true);
 
+drop policy if exists "Admins can manage sections" on public.sections;
 create policy "Admins can manage sections"
 on public.sections
 for all
@@ -145,7 +156,7 @@ with check (public.is_admin());
 -- models
 -- -----------------------------------------------------------------------------
 
-create table public.models (
+create table if not exists public.models (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   slug text not null unique,
@@ -166,12 +177,14 @@ create table public.models (
 
 alter table public.models enable row level security;
 
+drop policy if exists "Anyone can read visible models" on public.models;
 create policy "Anyone can read visible models"
 on public.models
 for select
 to public
 using (is_visible = true);
 
+drop policy if exists "Admins can manage models" on public.models;
 create policy "Admins can manage models"
 on public.models
 for all
@@ -183,17 +196,20 @@ with check (public.is_admin());
 -- model_images
 -- -----------------------------------------------------------------------------
 
-create table public.model_images (
+create table if not exists public.model_images (
   id uuid primary key default gen_random_uuid(),
   model_id uuid not null references public.models (id) on delete cascade,
   image_url text not null,
   sort_order integer not null default 0
 );
 
-create index model_images_model_id_idx on public.model_images (model_id);
+create index if not exists model_images_model_id_idx
+  on public.model_images (model_id);
 
 alter table public.model_images enable row level security;
 
+drop policy if exists "Anyone can read images of visible models"
+  on public.model_images;
 create policy "Anyone can read images of visible models"
 on public.model_images
 for select
@@ -207,6 +223,7 @@ using (
   )
 );
 
+drop policy if exists "Admins can manage model images" on public.model_images;
 create policy "Admins can manage model images"
 on public.model_images
 for all
@@ -218,7 +235,7 @@ with check (public.is_admin());
 -- services
 -- -----------------------------------------------------------------------------
 
-create table public.services (
+create table if not exists public.services (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   description text,
@@ -229,12 +246,14 @@ create table public.services (
 
 alter table public.services enable row level security;
 
+drop policy if exists "Anyone can read visible services" on public.services;
 create policy "Anyone can read visible services"
 on public.services
 for select
 to public
 using (is_visible = true);
 
+drop policy if exists "Admins can manage services" on public.services;
 create policy "Admins can manage services"
 on public.services
 for all
@@ -246,7 +265,7 @@ with check (public.is_admin());
 -- testimonials (also used as a client logo strip via logo_url)
 -- -----------------------------------------------------------------------------
 
-create table public.testimonials (
+create table if not exists public.testimonials (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   logo_url text,
@@ -257,12 +276,15 @@ create table public.testimonials (
 
 alter table public.testimonials enable row level security;
 
+drop policy if exists "Anyone can read visible testimonials"
+  on public.testimonials;
 create policy "Anyone can read visible testimonials"
 on public.testimonials
 for select
 to public
 using (is_visible = true);
 
+drop policy if exists "Admins can manage testimonials" on public.testimonials;
 create policy "Admins can manage testimonials"
 on public.testimonials
 for all
@@ -274,7 +296,7 @@ with check (public.is_admin());
 -- inquiries
 -- -----------------------------------------------------------------------------
 
-create table public.inquiries (
+create table if not exists public.inquiries (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   email text not null,
@@ -286,12 +308,14 @@ create table public.inquiries (
 
 alter table public.inquiries enable row level security;
 
+drop policy if exists "Anyone can submit an inquiry" on public.inquiries;
 create policy "Anyone can submit an inquiry"
 on public.inquiries
 for insert
 to anon, authenticated
 with check (true);
 
+drop policy if exists "Admins can manage inquiries" on public.inquiries;
 create policy "Admins can manage inquiries"
 on public.inquiries
 for all
@@ -307,18 +331,21 @@ insert into storage.buckets (id, name, public)
 values ('site-media', 'site-media', true)
 on conflict (id) do update set public = true;
 
+drop policy if exists "Anyone can read site media" on storage.objects;
 create policy "Anyone can read site media"
 on storage.objects
 for select
 to public
 using (bucket_id = 'site-media');
 
+drop policy if exists "Admins can upload site media" on storage.objects;
 create policy "Admins can upload site media"
 on storage.objects
 for insert
 to authenticated
 with check (bucket_id = 'site-media' and public.is_admin());
 
+drop policy if exists "Admins can update site media" on storage.objects;
 create policy "Admins can update site media"
 on storage.objects
 for update
@@ -326,6 +353,7 @@ to authenticated
 using (bucket_id = 'site-media' and public.is_admin())
 with check (bucket_id = 'site-media' and public.is_admin());
 
+drop policy if exists "Admins can delete site media" on storage.objects;
 create policy "Admins can delete site media"
 on storage.objects
 for delete
@@ -333,7 +361,28 @@ to authenticated
 using (bucket_id = 'site-media' and public.is_admin());
 
 -- -----------------------------------------------------------------------------
--- Seed data
+-- API role grants — PostgREST needs table privileges; RLS still decides which
+-- rows each role can read/write. (Missing grants make tables invisible to the
+-- API even when they exist — "PGRST205: Could not find the table".)
+-- -----------------------------------------------------------------------------
+
+grant usage on schema public to anon, authenticated, service_role;
+
+grant select on all tables in schema public to anon, authenticated, service_role;
+grant all on all tables in schema public to authenticated, service_role;
+grant all on all sequences in schema public to authenticated, service_role;
+
+grant insert on public.inquiries to anon;
+
+alter default privileges in schema public
+  grant select on tables to anon;
+alter default privileges in schema public
+  grant all on tables to authenticated, service_role;
+alter default privileges in schema public
+  grant all on sequences to authenticated, service_role;
+
+-- -----------------------------------------------------------------------------
+-- Seed data (skipped for rows that already exist)
 -- -----------------------------------------------------------------------------
 
 insert into public.site_settings (
@@ -353,7 +402,8 @@ insert into public.site_settings (
   '© 2026 Lumina Model Management. All rights reserved.',
   'Lumina Model Management — New York Talent Agency',
   'Lumina represents distinctive models for fashion, editorial, and commercial work worldwide.'
-);
+)
+on conflict (id) do nothing;
 
 insert into public.hero (
   headline, subheadline, background_image_url,
@@ -365,8 +415,9 @@ insert into public.hero (
   'View the Board',
   '/models',
   'Get in Touch',
-  '/contact'
-);
+  '/#contact'
+)
+on conflict (id) do nothing;
 
 insert into public.sections (key, title, subtitle, description, image_url, layout, sort_order, is_visible) values
   (
@@ -408,7 +459,8 @@ insert into public.sections (key, title, subtitle, description, image_url, layou
     'image-right',
     4,
     true
-  );
+  )
+on conflict (key) do nothing;
 
 insert into public.models (name, slug, category, cover_image_url, bio, height, bust, waist, hips, shoes, hair, eyes, sort_order, is_visible) values
   (
@@ -464,7 +516,8 @@ insert into public.models (name, slug, category, cover_image_url, bio, height, b
     'Kidswear and commercial talent, ages 8–12. Experienced in catalog, lifestyle, and national television spots.',
     null, null, null, null, 'Youth 3', 'Brown', 'Blue',
     6, true
-  );
+  )
+on conflict (slug) do nothing;
 
 insert into public.model_images (model_id, image_url, sort_order)
 select m.id, u.image_url, u.sort_order
@@ -482,9 +535,12 @@ from (values
   ('mila-petrova', 'https://placehold.co/900x1200/c1a0b0/1a1a1a?text=Mila+2', 2),
   ('noah-whitfield', 'https://placehold.co/900x1200/a8c9b4/1a1a1a?text=Noah+1', 1)
 ) as u(slug, image_url, sort_order)
-join public.models m on m.slug = u.slug;
+join public.models m on m.slug = u.slug
+where not exists (select 1 from public.model_images);
 
-insert into public.services (title, description, icon, sort_order, is_visible) values
+insert into public.services (title, description, icon, sort_order, is_visible)
+select v.title, v.description, v.icon, v.sort_order, v.is_visible
+from (values
   (
     'Editorial & Campaign Representation',
     'Full-service placement with magazines, fashion houses, and global brands — from lookbooks to season-long campaigns.',
@@ -512,12 +568,16 @@ insert into public.services (title, description, icon, sort_order, is_visible) v
     'handshake',
     4,
     true
-  );
+  )
+) as v(title, description, icon, sort_order, is_visible)
+where not exists (select 1 from public.services);
 
-insert into public.testimonials (name, logo_url, quote, sort_order, is_visible) values
+insert into public.testimonials (name, logo_url, quote, sort_order, is_visible)
+select v.name, v.logo_url, v.quote, v.sort_order, v.is_visible
+from (values
   (
     'Maison Delacroix',
-    null,
+    null::text,
     'Lumina understands editorial like few agencies do. Every face they send arrives prepared, punctual, and camera-ready.',
     1,
     true
@@ -525,13 +585,13 @@ insert into public.testimonials (name, logo_url, quote, sort_order, is_visible) 
   (
     'Vogue Editorial',
     'https://placehold.co/200x80/e8e4dd/1a1a1a?text=Vogue',
-    null,
+    null::text,
     2,
     true
   ),
   (
     'North & Co. Campaigns',
-    null,
+    null::text,
     'We booked three of Lumina''s new faces for our spring campaign and every one of them exceeded expectations on set.',
     3,
     true
@@ -539,7 +599,9 @@ insert into public.testimonials (name, logo_url, quote, sort_order, is_visible) 
   (
     'Bella Magazine',
     'https://placehold.co/200x80/dcd8d0/1a1a1a?text=Bella',
-    null,
+    null::text,
     4,
     true
-  );
+  )
+) as v(name, logo_url, quote, sort_order, is_visible)
+where not exists (select 1 from public.testimonials);

@@ -31,9 +31,10 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
 
-  const isLoginPage = request.nextUrl.pathname.startsWith("/admin/login");
-  const isAdminRoute =
-    request.nextUrl.pathname.startsWith("/admin") && !isLoginPage;
+  const pathname = request.nextUrl.pathname;
+  const isLoginPage =
+    pathname === "/admin" || pathname.startsWith("/admin/login");
+  const isAdminRoute = pathname.startsWith("/admin") && !isLoginPage;
 
   if (isAdminRoute) {
     let isAdmin = false;
@@ -49,7 +50,7 @@ export async function updateSession(request: NextRequest) {
 
     if (!isAdmin) {
       const url = request.nextUrl.clone();
-      url.pathname = "/admin/login";
+      url.pathname = "/admin";
       const redirect = NextResponse.redirect(url);
       for (const cookie of supabaseResponse.cookies.getAll()) {
         redirect.cookies.set(cookie);

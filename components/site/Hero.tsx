@@ -1,24 +1,27 @@
 import Image from "next/image";
 import { Button } from "@/components/Button";
 import { Container } from "@/components/Container";
+import { DEFAULT_HERO } from "@/lib/defaults";
 import { getHero } from "@/lib/hero";
 import { blurPlaceholderDark } from "@/lib/images";
-
-const DEFAULT_HEADLINE = "Faces That Define the Season";
 
 export async function Hero() {
   const hero = await getHero();
 
-  const headline = hero?.headline || DEFAULT_HEADLINE;
-  const subheadline = hero?.subheadline ?? null;
+  const headline = hero?.headline || DEFAULT_HERO.headline;
+  const subheadline = hero?.subheadline ?? DEFAULT_HERO.subheadline;
   const primary =
     hero?.cta_label && hero?.cta_link
       ? { label: hero.cta_label, href: hero.cta_link }
-      : null;
+      : hero
+        ? null
+        : DEFAULT_HERO.primary;
   const secondary =
     hero?.secondary_cta_label && hero?.secondary_cta_link
       ? { label: hero.secondary_cta_label, href: hero.secondary_cta_link }
-      : null;
+      : hero
+        ? null
+        : DEFAULT_HERO.secondary;
   const hasCtas = primary !== null || secondary !== null;
 
   return (

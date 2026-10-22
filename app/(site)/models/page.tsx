@@ -2,6 +2,7 @@ import { Container } from "@/components/Container";
 import { FadeIn } from "@/components/FadeIn";
 import { SectionHeading } from "@/components/SectionHeading";
 import { ModelGrid } from "@/components/site/ModelGrid";
+import { DEFAULT_MODELS } from "@/lib/defaults";
 import { getModels } from "@/lib/models";
 
 export const metadata = {
@@ -16,7 +17,9 @@ export const metadata = {
 };
 
 export default async function ModelsPage() {
-  const models = await getModels();
+  const fetched = await getModels();
+  const isPlaceholder = fetched === null;
+  const models = fetched ?? (isPlaceholder ? DEFAULT_MODELS : []);
 
   return (
     <div>
@@ -36,7 +39,7 @@ export default async function ModelsPage() {
 
       <section className="py-16 md:py-24">
         <Container>
-          <ModelGrid models={models} />
+          <ModelGrid models={models} disableLinks={isPlaceholder} />
         </Container>
       </section>
     </div>

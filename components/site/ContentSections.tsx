@@ -1,6 +1,7 @@
 import { Container } from "@/components/Container";
 import { FadeIn } from "@/components/FadeIn";
 import { ScrollScaleImage } from "@/components/site/ScrollScaleImage";
+import { DEFAULT_SECTIONS } from "@/lib/defaults";
 import { getSections } from "@/lib/sections";
 import { cn } from "@/lib/utils";
 import type { Section } from "@/types";
@@ -100,7 +101,7 @@ function FullBleedSection({ section }: { section: Section }) {
 }
 
 export async function ContentSections() {
-  const sections = await getSections();
+  const sections = (await getSections()) ?? DEFAULT_SECTIONS;
 
   if (sections.length === 0) {
     return null;

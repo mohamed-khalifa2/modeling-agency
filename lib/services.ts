@@ -2,7 +2,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import type { Service } from "@/types";
 
-export async function getServices(): Promise<Service[]> {
+export async function getServices(): Promise<Service[] | null> {
   "use cache";
   cacheLife("hours");
   cacheTag("services");
@@ -11,18 +11,19 @@ export async function getServices(): Promise<Service[]> {
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!url || !key) {
-    return [];
+    return null;
   }
 
   const supabase = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("services")
     .select("*")
     .eq("is_visible", true)
     .order("sort_order");
 
+  if (error) return null;
   return (data as Service[]) ?? [];
 }

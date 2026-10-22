@@ -1,5 +1,5 @@
 export const adminNav = [
-  { label: "Dashboard", href: "/admin" },
+  { label: "Dashboard", href: "/admin/dashboard" },
   { label: "Site Settings", href: "/admin/settings" },
   { label: "Hero", href: "/admin/hero" },
   { label: "Sections", href: "/admin/sections" },

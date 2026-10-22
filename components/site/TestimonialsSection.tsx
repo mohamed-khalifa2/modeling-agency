@@ -3,10 +3,11 @@ import { Container } from "@/components/Container";
 import { FadeIn } from "@/components/FadeIn";
 import { SectionHeading } from "@/components/SectionHeading";
 import { blurPlaceholder } from "@/lib/images";
+import { DEFAULT_TESTIMONIALS } from "@/lib/defaults";
 import { getTestimonials } from "@/lib/testimonials";
 
 export async function TestimonialsSection() {
-  const testimonials = await getTestimonials();
+  const testimonials = (await getTestimonials()) ?? DEFAULT_TESTIMONIALS;
 
   if (testimonials.length === 0) {
     return null;

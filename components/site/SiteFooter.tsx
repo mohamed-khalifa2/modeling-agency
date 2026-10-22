@@ -6,6 +6,11 @@ import {
   TikTokIcon,
 } from "@/components/site/icons";
 import { mailHref, telHref, waHref } from "@/lib/contact";
+import {
+  DEFAULT_CONTACT,
+  DEFAULT_SOCIALS,
+  DEFAULT_TAGLINE,
+} from "@/lib/defaults";
 import { siteNav } from "@/lib/site-nav";
 import { getCopyrightYear, getSiteSettings } from "@/lib/site-settings";
 import type { SiteSettings } from "@/types";
@@ -21,22 +26,18 @@ type Social = {
 function buildSocials(settings: SiteSettings | null): Social[] {
   const socials: Social[] = [];
 
-  if (settings?.instagram) {
-    socials.push({
-      label: "Instagram",
-      href: settings.instagram,
-      Icon: InstagramIcon,
-    });
+  const instagram = settings ? settings.instagram : DEFAULT_SOCIALS.instagram;
+  const facebook = settings ? settings.facebook : DEFAULT_SOCIALS.facebook;
+  const tiktok = settings ? settings.tiktok : DEFAULT_SOCIALS.tiktok;
+
+  if (instagram) {
+    socials.push({ label: "Instagram", href: instagram, Icon: InstagramIcon });
   }
-  if (settings?.facebook) {
-    socials.push({
-      label: "Facebook",
-      href: settings.facebook,
-      Icon: FacebookIcon,
-    });
+  if (facebook) {
+    socials.push({ label: "Facebook", href: facebook, Icon: FacebookIcon });
   }
-  if (settings?.tiktok) {
-    socials.push({ label: "TikTok", href: settings.tiktok, Icon: TikTokIcon });
+  if (tiktok) {
+    socials.push({ label: "TikTok", href: tiktok, Icon: TikTokIcon });
   }
 
   return socials;
@@ -49,18 +50,17 @@ export async function SiteFooter() {
   ]);
 
   const agencyName = settings?.agency_name || DEFAULT_AGENCY_NAME;
+  const tagline = settings ? settings.tagline : DEFAULT_TAGLINE;
+  const email = settings ? settings.email : DEFAULT_CONTACT.email;
+  const phone = settings ? settings.phone : DEFAULT_CONTACT.phone;
+  const whatsapp = settings ? settings.whatsapp : DEFAULT_CONTACT.whatsapp;
+  const address = settings ? settings.address : DEFAULT_CONTACT.address;
   const socials = buildSocials(settings);
 
   const contactItems = [
-    settings?.email
-      ? { label: settings.email, href: mailHref(settings.email) }
-      : null,
-    settings?.phone
-      ? { label: settings.phone, href: telHref(settings.phone) }
-      : null,
-    settings?.whatsapp
-      ? { label: "WhatsApp", href: waHref(settings.whatsapp) }
-      : null,
+    email ? { label: email, href: mailHref(email) } : null,
+    phone ? { label: phone, href: telHref(phone) } : null,
+    whatsapp ? { label: "WhatsApp", href: waHref(whatsapp) } : null,
   ].filter((item): item is { label: string; href: string } => item !== null);
 
   return (
@@ -71,9 +71,9 @@ export async function SiteFooter() {
             <p className="max-w-lg font-serif text-5xl font-light leading-[1.05] tracking-[-0.01em] md:text-6xl lg:text-7xl">
               {agencyName}
             </p>
-            {settings?.tagline ? (
+            {tagline ? (
               <p className="mt-6 max-w-md text-sm leading-relaxed text-paper/60">
-                {settings.tagline}
+                {tagline}
               </p>
             ) : null}
           </div>
@@ -112,9 +112,9 @@ export async function SiteFooter() {
                     </a>
                   </li>
                 ))}
-                {settings?.address ? (
+                {address ? (
                   <li className="leading-relaxed text-paper/60">
-                    {settings.address}
+                    {address}
                   </li>
                 ) : null}
               </ul>

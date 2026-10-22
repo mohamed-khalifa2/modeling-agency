@@ -7,8 +7,11 @@ import { Container } from "@/components/Container";
 import { FadeIn } from "@/components/FadeIn";
 import { Skeleton } from "@/components/Skeleton";
 import { ScrollScaleImage } from "@/components/site/ScrollScaleImage";
+import { mailHref, waHref } from "@/lib/contact";
+import { DEFAULT_CONTACT } from "@/lib/defaults";
 import { blurPlaceholder } from "@/lib/images";
 import { getModelDetail } from "@/lib/models";
+import { getSiteSettings } from "@/lib/site-settings";
 import { modelCategoryLabels } from "@/types";
 
 export const instant = false;
@@ -102,6 +105,13 @@ async function ModelDetail({
 
   const stats = statFields(model).filter((stat) => stat.value);
 
+  const settings = await getSiteSettings();
+  const contactEmail = settings ? settings.email : DEFAULT_CONTACT.email;
+  const contactWhatsapp = settings
+    ? settings.whatsapp
+    : DEFAULT_CONTACT.whatsapp;
+  const bookHref = `/?model=${model.slug}&modelName=${encodeURIComponent(model.name)}#contact`;
+
   return (
     <div>
       <section className="border-b border-ink/10 pb-10 pt-32 md:pb-12 md:pt-40">
@@ -168,13 +178,34 @@ async function ModelDetail({
                 </p>
               )}
 
-              <div className="mt-10">
-                <Button
-                  href={`/?model=${model.slug}&modelName=${encodeURIComponent(model.name)}#contact`}
-                  size="lg"
-                >
+              <div className="mt-10 flex flex-wrap items-center gap-4">
+                <Button href={bookHref} size="lg">
                   Book this model
                 </Button>
+                {contactEmail ? (
+                  <Button
+                    href={mailHref(contactEmail, {
+                      subject: `Booking inquiry: ${model.name}`,
+                      body: `Hello, I would like to inquire about booking ${model.name}.`,
+                    })}
+                    variant="outline"
+                    size="lg"
+                  >
+                    Email us
+                  </Button>
+                ) : null}
+                {contactWhatsapp ? (
+                  <Button
+                    href={waHref(
+                      contactWhatsapp,
+                      `Hello, I would like to book ${model.name}.`
+                    )}
+                    variant="outline"
+                    size="lg"
+                  >
+                    WhatsApp
+                  </Button>
+                ) : null}
               </div>
             </FadeIn>
 

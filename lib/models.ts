@@ -18,13 +18,13 @@ function createContentClient() {
 export async function getModels(options?: {
   category?: ModelCategory;
   limit?: number;
-}): Promise<Model[]> {
+}): Promise<Model[] | null> {
   "use cache";
   cacheLife("hours");
   cacheTag("models");
 
   const supabase = createContentClient();
-  if (!supabase) return [];
+  if (!supabase) return null;
 
   let query = supabase
     .from("models")
@@ -39,7 +39,8 @@ export async function getModels(options?: {
     query = query.limit(options.limit);
   }
 
-  const { data } = await query;
+  const { data, error } = await query;
+  if (error) return null;
   return (data as Model[]) ?? [];
 }
 

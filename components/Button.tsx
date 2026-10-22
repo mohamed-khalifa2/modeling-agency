@@ -81,15 +81,14 @@ export function Button({
   ) : null;
 
   if (href) {
-    const isExternal = href.startsWith("http");
+    const isHttp = href.startsWith("http");
     const linkClass = classes(variant, tone, size, className);
 
-    if (isExternal) {
+    if (/^(https?:|mailto:|tel:)/.test(href)) {
       return (
         <a
           href={href}
-          target="_blank"
-          rel="noopener noreferrer"
+          {...(isHttp ? { target: "_blank", rel: "noopener noreferrer" } : {})}
           className={linkClass}
         >
           {children}
